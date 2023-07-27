@@ -2,9 +2,6 @@ from collections import defaultdict
 from torch import nn, optim
 from utils.utils import plot_examples
 from torch_lr_finder import LRFinder
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 from utils.utils import get_device, visualize_data
 from utils.backprop import Train , Test
