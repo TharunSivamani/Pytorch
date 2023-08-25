@@ -116,14 +116,14 @@ class YOLOv3LightningModel(pl.LightningModule):
         self.criterion = YoloLoss()
 
         self.metric = dict(
-            total_train_steps=0,
-            epoch_train_loss=[],
-            epoch_train_acc=[],
-            epoch_train_steps=0,
-            total_val_steps=0,
-            epoch_val_loss=[],
-            epoch_val_acc=[],
-            epoch_val_steps=0,
+            train_steps=0,
+            train_losses=[],
+            train_accuracy=[],
+            train_count=0,
+            val_steps=0,
+            val_losses=[],
+            val_acc=[],
+            val_count=0,
             train_loss=[],
             val_loss=[],
             train_acc=[],
@@ -201,10 +201,10 @@ class YOLOv3LightningModel(pl.LightningModule):
         # 
         # plot_examples(self,train_batch,0.5, 0.6,cfg.ANCHORS)
         # 
-        self.metric['total_train_steps'] += 1
-        self.metric['epoch_train_steps'] += 1
-        self.metric['epoch_train_loss'].append(loss)
-        self.metric['epoch_train_acc'].append(acc)
+        self.metric['train_steps'] += 1
+        self.metric['train_count'] += 1
+        self.metric['train_losses'].append(loss)
+        self.metric['train_accuracy'].append(acc)
 
         self.log_dict({'train_loss': loss['total_loss']})
 
@@ -217,16 +217,16 @@ class YOLOv3LightningModel(pl.LightningModule):
         loss = self.criterion(output, target, loss_dict=True, anchor_list=self.anchor_list)
         acc = self.criterion.check_class_accuracy(output, target, cfg.CONF_THRESHOLD)
 
-        self.metric['total_val_steps'] += 1
-        self.metric['epoch_val_steps'] += 1
-        self.metric['epoch_val_loss'].append(loss)
-        self.metric['epoch_val_acc'].append(acc)
+        self.metric['val_steps'] += 1
+        self.metric['val_count'] += 1
+        self.metric['val_losses'].append(loss)
+        self.metric['val_acc'].append(acc)
 
         self.log_dict({'val_loss': loss['total_loss']})
 
 
     def on_validation_epoch_end(self):
-        if self.metric['total_train_steps']:
+        if self.metric['train_steps']:
             print('Epoch ', self.current_epoch)
             epoch_loss = 0
             epoch_acc = dict(
@@ -237,10 +237,10 @@ class YOLOv3LightningModel(pl.LightningModule):
                 total_noobj=0,
                 total_obj=0
             )
-            for i in range(self.metric["epoch_train_steps"]):
-                lo = self.metric["epoch_train_loss"][i]
+            for i in range(self.metric["train_count"]):
+                lo = self.metric["train_losses"][i]
                 epoch_loss += lo["total_loss"]
-                acc = self.metric["epoch_train_acc"][i]
+                acc = self.metric["train_accuracy"][i]
                 epoch_acc["correct_class"] += acc["correct_class"]
                 epoch_acc["correct_noobj"] += acc["correct_noobj"]
                 epoch_acc["correct_obj"] += acc["correct_obj"]
@@ -259,12 +259,12 @@ class YOLOv3LightningModel(pl.LightningModule):
                 f"Obj accuracy    : {(epoch_acc['correct_obj']/(epoch_acc['total_obj']+1e-16))*100:2f}%"
             )
             print(
-                f"Total loss: {(epoch_loss/(len(self.metric['epoch_train_loss'])+1e-16)):2f}"
+                f"Total loss: {(epoch_loss/(len(self.metric['train_losses'])+1e-16)):2f}"
             )
 
-            self.metric["epoch_train_loss"] = []
-            self.metric["epoch_train_acc"] = []
-            self.metric["epoch_train_steps"] = 0
+            self.metric["train_losses"] = []
+            self.metric["train_accuracy"] = []
+            self.metric["train_count"] = 0
 
             # ---
             epoch_loss = 0
@@ -276,10 +276,10 @@ class YOLOv3LightningModel(pl.LightningModule):
                 total_noobj=0,
                 total_obj=0,
             )
-            for i in range(self.metric["epoch_val_steps"]):
-                lo = self.metric["epoch_val_loss"][i]
+            for i in range(self.metric["val_count"]):
+                lo = self.metric["val_losses"][i]
                 epoch_loss += lo["total_loss"]
-                acc = self.metric["epoch_val_acc"][i]
+                acc = self.metric["val_acc"][i]
                 epoch_acc["correct_class"] += acc["correct_class"]
                 epoch_acc["correct_noobj"] += acc["correct_noobj"]
                 epoch_acc["correct_obj"] += acc["correct_obj"]
@@ -298,12 +298,12 @@ class YOLOv3LightningModel(pl.LightningModule):
                 f"Obj accuracy    : {(epoch_acc['correct_obj']/(epoch_acc['total_obj']+1e-16))*100:2f}%"
             )
             print(
-                f"Total loss: {(epoch_loss/(len(self.metric['epoch_val_loss'])+1e-16)):2f}"
+                f"Total loss: {(epoch_loss/(len(self.metric['val_losses'])+1e-16)):2f}"
             )
 
-            self.metric["epoch_val_loss"] = []
-            self.metric["epoch_val_acc"] = []
-            self.metric["epoch_val_steps"] = 0
+            self.metric["val_losses"] = []
+            self.metric["val_acc"] = []
+            self.metric["val_count"] = 0
 
             print("Saving and Creating checkpoint...")
             print("\n")
