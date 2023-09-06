@@ -1,3 +1,3 @@
 # Transformers-BiLang
 
-## This Repo contains the Transformer Architecture for the BiLang Model
+## This Repo contains the Transformer Architecture for the BiLang Model (en-it)
